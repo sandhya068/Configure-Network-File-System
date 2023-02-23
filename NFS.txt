@@ -1,0 +1,91 @@
+Hardware description of both machines (Master and Compute Node):
+
+ISO: CentOS 7
+Memory: 7.0 GB
+Processors: 4
+Hard disk: 50 GB 
+
+----------------------------------------------------------------------------
+Master:	192.168.174.249 
+Compute Node-1: 192.168.174.170 
+---------------------------------------------------------------------------
+
+
+On Master Node:
+=========================
+
+
+hostnamectl set-hostname master 			# change hostname
+
+
+systemctl stop firewalld.service 			# Stop Firewall
+
+
+systemctl disable firewalld.service 			# Disable Firewall
+
+
+sestatus						# Check the current SELinux status
+
+
+setenforce 0						# Disable SELinux on CentOS 7 temporarily		
+
+
+vim /etc/selinux/config					# Set the SELINUX to disabled
+	"SELINUX=disabled"
+
+init 6							# Reboot the Linux server
+
+
+yum install epel-release nfs-utils			#  Installing EPEL and required nfs-utils package on CentOS via yum
+
+
+systemctl start nfs					# Start the NFS services
+
+
+systemctl enable nfs					# Enable the NFS services 
+
+
+vim /etc/exports					# Specify what directories/file system you want to share with the NFS clients			
+	/home *(rw,sync,no_root_squash)		# Here, "sync" - File data changes are made to disk immediately; "*" -  A domain name using wildcards; "rw" -  read/write access; 
+							# "/home" -  /home directory; "no_root_squash" -  Map the root user and group account from the NFS client to the local root and group accounts.
+
+
+exportfs -a						# Export or unexport all directories
+
+
+vim /etc/hosts						# Enter the all Node Internet Protocol (IP) with host names 
+	192.168.174.170 cn01
+	192.168.174.249 master
+
+scp /etc/hosts root@cn01:/etc/hosts			# Copy HOSTS file to all other nodes
+
+
+ssh-keygen						# Creating new authentication key pairs for SSH
+
+
+ssh-copy-id root@cn01					# Allows you to install an SSH key on a remote server’s(cn01) authorized keys
+
+
+ssh cn01						# Login to cn01
+
+
+showmount -e master					# Show mountable file systems on remote machines(cn01)
+
+
+mount -t nfs master:/home /home			# the /home directory is being mounted from the server "master" by using NFS 
+
+
+useradd github						# Add user "github" for testing purpose
+
+
+vim /etc/fstab						# The fstab file is designed to configure a rule where specific file systems are detected, then automatically mounted in the user's desired order every time the system boots
+	master:/home /home nfs defaults 0 0
+
+
+ll /home/						# list directory content (It will show github user along with other users/files/directories)
+
+
+exit							# exit from the current shell  
+
+
+ll /home/						# It will also show "github" user
